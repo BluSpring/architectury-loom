@@ -133,7 +133,7 @@ public abstract class CompileConfiguration implements Runnable {
 				extension.setDependencyManager(dependencyManager);
 				dependencyManager.handleDependencies(getProject(), serviceManager);
 			} catch (Exception e) {
-				ExceptionUtil.printFileLocks(e, getProject());
+				ExceptionUtil.processException(e, getProject());
 				disownLock();
 				throw ExceptionUtil.createDescriptiveWrapper(RuntimeException::new, "Failed to setup Minecraft", e);
 			}
@@ -282,7 +282,9 @@ public abstract class CompileConfiguration implements Runnable {
 			final SrgMinecraftProvider<?> srgMinecraftProvider = jarConfiguration.createSrgMinecraftProvider(project);
 			extension.setSrgMinecraftProvider(srgMinecraftProvider);
 			srgMinecraftProvider.provide(provideContext);
-		} else if (extension.isNeoForge()) {
+		}
+
+		if (extension.isForgeLike() && extension.getForgeProvider().usesMojangAtRuntime()) {
 			final MojangMappedMinecraftProvider<?> mojangMappedMinecraftProvider = jarConfiguration.createMojangMappedMinecraftProvider(project);
 			extension.setMojangMappedMinecraftProvider(mojangMappedMinecraftProvider);
 			mojangMappedMinecraftProvider.provide(provideContext);

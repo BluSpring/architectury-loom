@@ -168,12 +168,18 @@ public class ModProcessor {
 		String fromM = IntermediaryNamespaces.runtimeIntermediary(project);
 
 		Stopwatch stopwatch = Stopwatch.createStarted();
+		Set<String> knownIndyBsms = new HashSet<>(extension.getKnownIndyBsms().get());
+
+		for (ModDependency modDependency : remapList) {
+			knownIndyBsms.addAll(modDependency.getMetadata().knownIdyBsms());
+		}
 
 		MappingOption mappingOption = MappingOption.forPlatform(extension);
 		MemoryMappingTree mappings = mappingConfiguration.getMappingsService(serviceManager, mappingOption).getMappingTree();
 		LoggerFilter.replaceSystemOut();
+
 		TinyRemapper.Builder builder = TinyRemapper.newRemapper()
-				.withKnownIndyBsm(extension.getKnownIndyBsms().get())
+				.withKnownIndyBsm(knownIndyBsms)
 				.withMappings(TinyRemapperHelper.create(mappings, fromM, toM, false))
 				.renameInvalidLocals(false)
 				.extraAnalyzeVisitor(AccessWidenerAnalyzeVisitorProvider.createFromMods(fromM, remapList, extension.getPlatform().get()));
@@ -201,7 +207,7 @@ public class ModProcessor {
 
 		final TinyRemapper remapper = builder.build();
 
-		remapper.readClassPath(extension.getMinecraftJars(IntermediaryNamespaces.intermediaryNamespace(project)).toArray(Path[]::new));
+		remapper.readClassPath(extension.getMinecraftJars(IntermediaryNamespaces.runtimeIntermediaryNamespace(project)).toArray(Path[]::new));
 
 		final Map<ModDependency, InputTag> tagMap = new HashMap<>();
 		final Map<ModDependency, OutputConsumerPath> outputConsumerMap = new HashMap<>();

@@ -53,8 +53,8 @@ import net.fabricmc.loom.util.Constants;
 import net.fabricmc.loom.util.ExceptionUtil;
 import net.fabricmc.loom.util.FileSystemUtil;
 import net.fabricmc.loom.util.PropertyUtil;
-import net.fabricmc.loom.util.srg.RemapObjectHolderVisitor;
 import net.fabricmc.loom.util.srg.ForgeMappingsMerger;
+import net.fabricmc.loom.util.srg.RemapObjectHolderVisitor;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 
 public class ForgeLibrariesProvider {
@@ -93,6 +93,13 @@ public class ForgeLibrariesProvider {
 
 						dep = "dev.architectury:mixin-patched" + version + ".+";
 					}
+				}
+			}
+
+			if (lib.startsWith("net.minecraftforge:bootstrap:")) {
+				if (extension.isForge() && extension.getForgeProvider().getVersion().getMajorVersion() >= Constants.Forge.MIN_BOOTSTRAP_DEV_VERSION) {
+					String version = lib.substring(lib.lastIndexOf(":"));
+					dependencies.add(project.getDependencies().create("net.minecraftforge:bootstrap-dev" + version));
 				}
 			}
 

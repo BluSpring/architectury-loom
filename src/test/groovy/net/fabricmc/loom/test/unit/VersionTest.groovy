@@ -1,7 +1,7 @@
 /*
  * This file is part of fabric-loom, licensed under the MIT License (MIT).
  *
- * Copyright (c) 2016-2021 FabricMC
+ * Copyright (c) 2024 FabricMC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,23 +22,34 @@
  * SOFTWARE.
  */
 
-package net.fabricmc.loom.configuration.providers.minecraft;
+package net.fabricmc.loom.test.unit
 
-import java.util.List;
-import java.util.Map;
+import net.fabricmc.loom.util.Version
+import spock.lang.Specification
 
-import org.jetbrains.annotations.Nullable;
+class VersionTest extends Specification {
+	def "version comparison"() {
+		when:
+		def compare = Version.parse(s1) <=> Version.parse(s2)
+		// turns compare into 1 or 0 or -1
+		compare = compare <=> 0
 
-public record ManifestVersion(List<Versions> versions, Map<String, String> latest) {
-	public static class Versions {
-		public String id, url, sha1;
-	}
+		then:
+		compare == expected
 
-	@Nullable
-	public Versions getVersion(String id) {
-		return versions.stream()
-				.filter(versions -> versions.id.equalsIgnoreCase(id))
-				.findFirst()
-				.orElse(null);
+		where:
+		s1             | s2              | expected
+		"1.1.1"        | "1.1.1"         | 0
+		"1.1.1"        | "1.1.0"         | 1
+		"1.1.0"        | "1.1"           | 0
+		"1.0.0"        | "1"             | 0
+		"1-"           | "1"             | -1
+		"1.1.1"        | "1.1.2"         | -1
+		"1.1.1"        | "1.1.1-"        | 1
+		"1.1.1-beta"   | "1.1.1-alpha"   | 1
+		"1.1.1-alpha"  | "1.1.1-beta"    | -1
+		"1.1.1-beta.1" | "1.1.1-beta.2"  | -1
+		"1.1.1-beta.1" | "1.1.1-beta.10" | -1
+		"1.1.1+123"    | "1.1.1+567"     | 0
 	}
 }

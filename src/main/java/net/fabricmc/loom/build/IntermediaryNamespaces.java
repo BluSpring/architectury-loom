@@ -1,7 +1,7 @@
 /*
  * This file is part of fabric-loom, licensed under the MIT License (MIT).
  *
- * Copyright (c) 2022-2023 FabricMC
+ * Copyright (c) 2022-2024 FabricMC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@ import org.gradle.api.Project;
 
 import net.fabricmc.loom.LoomGradleExtension;
 import net.fabricmc.loom.api.mappings.layered.MappingsNamespace;
+import net.fabricmc.loom.util.ModPlatform;
 
 public final class IntermediaryNamespaces {
 	/**
@@ -49,8 +50,14 @@ public final class IntermediaryNamespaces {
 	 * Returns the intermediary namespace of the project.
 	 */
 	public static MappingsNamespace intermediaryNamespace(Project project) {
-		LoomGradleExtension extension = LoomGradleExtension.get(project);
-		return switch (extension.getPlatform().get()) {
+		return intermediaryNamespace(LoomGradleExtension.get(project).getPlatform().get());
+	}
+
+	/**
+	 * Returns the intermediary namespace of the platform.
+	 */
+	public static MappingsNamespace intermediaryNamespace(ModPlatform platform) {
+		return switch (platform) {
 		case FABRIC, QUILT -> MappingsNamespace.INTERMEDIARY;
 		case FORGE -> MappingsNamespace.SRG;
 		case NEOFORGE -> MappingsNamespace.MOJANG;
@@ -69,7 +76,7 @@ public final class IntermediaryNamespaces {
 	/**
 	 * Potentially replaces the remapping target namespace for mixin refmaps.
 	 *
-	 * <p>All {@linkplain #intermediary(Project) intermediary-like namespaces} are replaced
+	 * <p>All {@linkplain #runtimeIntermediary(Project) intermediary-like namespaces} are replaced
 	 * by {@code intermediary} since fabric-mixin-compile-extensions only supports intermediary.
 	 * We transform the namespaces in the input mappings, e.g. {@code intermediary} -> {@code yraidemretni} and
 	 * {@code srg} -> {@code intermediary}.

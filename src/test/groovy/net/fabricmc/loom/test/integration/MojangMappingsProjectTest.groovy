@@ -24,12 +24,11 @@
 
 package net.fabricmc.loom.test.integration
 
+import net.fabricmc.loom.test.util.GradleProjectTestTrait
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import net.fabricmc.loom.test.util.GradleProjectTestTrait
-
-import static net.fabricmc.loom.test.LoomTestConstants.*
+import static net.fabricmc.loom.test.LoomTestConstants.STANDARD_TEST_VERSIONS
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 class MojangMappingsProjectTest extends Specification implements GradleProjectTestTrait {
@@ -45,6 +44,26 @@ class MojangMappingsProjectTest extends Specification implements GradleProjectTe
 		then:
 		result.task(":build").outcome == SUCCESS
 		dependenciesResult.task(":dependencies").outcome == SUCCESS
+
+		where:
+		version << STANDARD_TEST_VERSIONS
+	}
+
+	@Unroll
+	def "build no intermediary (gradle #version)"() {
+		setup:
+		def gradle = gradleProject(project: "mojangMappings", version: version)
+		gradle.buildGradle << '''
+			loom {
+				noIntermediateMappings()
+			}
+		'''
+
+		when:
+		def result = gradle.run(task: "build")
+
+		then:
+		result.task(":build").outcome == SUCCESS
 
 		where:
 		version << STANDARD_TEST_VERSIONS

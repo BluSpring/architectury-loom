@@ -60,9 +60,9 @@ import net.fabricmc.loom.util.service.ScopedSharedServiceManager;
 import net.fabricmc.loom.util.srg.InnerClassRemapper;
 import net.fabricmc.loom.util.srg.RemapObjectHolderVisitor;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
-import net.fabricmc.tinyremapper.extension.mixin.MixinExtension;
 import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;
+import net.fabricmc.tinyremapper.extension.mixin.MixinExtension;
 
 public abstract class AbstractMappedMinecraftProvider<M extends MinecraftProvider> implements MappedMinecraftProvider.ProviderImpl {
 	protected final M minecraftProvider;
@@ -245,7 +245,7 @@ public abstract class AbstractMappedMinecraftProvider<M extends MinecraftProvide
 					className = "net.minecraftforge.registries.ObjectHolderRegistry";
 				}
 
-				final String sourceNamespace = IntermediaryNamespaces.intermediary(project);
+				final String sourceNamespace = IntermediaryNamespaces.runtimeIntermediary(project);
 				final MemoryMappingTree mappings = mappingsService.getMappingTree();
 				RemapObjectHolderVisitor.remapObjectHolder(remappedJars.outputJar().getPath(), className, mappings, sourceNamespace, "named");
 			}

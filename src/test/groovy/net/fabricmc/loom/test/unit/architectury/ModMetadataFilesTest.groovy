@@ -1,7 +1,7 @@
 /*
  * This file is part of fabric-loom, licensed under the MIT License (MIT).
  *
- * Copyright (c) 2023 FabricMC
+ * Copyright (c) 2023-2024 FabricMC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,20 +24,19 @@
 
 package net.fabricmc.loom.test.unit.architectury
 
-import java.nio.file.Files
-import java.nio.file.Path
-
 import dev.architectury.loom.metadata.ArchitecturyCommonJson
 import dev.architectury.loom.metadata.ErroringModMetadataFile
 import dev.architectury.loom.metadata.ModMetadataFiles
 import dev.architectury.loom.metadata.QuiltModJson
-import spock.lang.Specification
-import spock.lang.TempDir
-
 import net.fabricmc.loom.test.unit.forge.ModsTomlTest
 import net.fabricmc.loom.util.ZipUtils
 import net.fabricmc.loom.util.fmj.FabricModJsonFactory
 import net.fabricmc.loom.util.fmj.ModMetadataFabricModJson
+import spock.lang.Specification
+import spock.lang.TempDir
+
+import java.nio.file.Files
+import java.nio.file.Path
 
 class ModMetadataFilesTest extends Specification {
 	@TempDir
@@ -127,23 +126,6 @@ class ModMetadataFilesTest extends Specification {
 		then:
 		modMetadata instanceof ErroringModMetadataFile
 		modMetadata.fileName == 'neoforge.mods.toml [erroring]'
-	}
-
-	def "read fabric.mod.json from directory"() {
-		given:
-		workingDir.resolve('fabric.mod.json').text = '''
-			{
-				"schemaVersion": 1,
-				"id": "test",
-				"version": 1
-			}
-			'''.stripIndent()
-		workingDir.resolve('architectury.common.json').text = '{}'
-		when:
-		def fmj = FabricModJsonFactory.createFromDirectory(workingDir)
-		then:
-		!(fmj instanceof ModMetadataFabricModJson)
-		fmj.id == 'test'
 	}
 
 	def "read fabric.mod.json from zip"() {

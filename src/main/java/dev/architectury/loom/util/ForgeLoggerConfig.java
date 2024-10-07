@@ -5,10 +5,12 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.StringJoiner;
 
 import org.gradle.api.Project;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import net.fabricmc.loom.LoomGradleExtension;
@@ -22,46 +24,42 @@ public final class ForgeLoggerConfig {
 			new ArtifactCoordinates("net.minecraftforge", "forge", "launcher")
 	);
 
-	public static void copyToPath(Project project, Path outputFile) {
-		try {
-			Files.deleteIfExists(outputFile);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-
+	public static @Nullable File getForgeLoggerConfigSource(Project project) {
 		final List<String> libraries = LoomGradleExtension.get(project)
 				.getForgeUserdevProvider()
 				.getConfig()
 				.libraries();
-		boolean found = false;
 
 		for (String library : libraries) {
 			if (LOGGER_CONFIG_ARTIFACTS.stream().anyMatch(artifact -> artifact.matches(library))) {
-				final File libraryFile = project.getConfigurations()
+				return project.getConfigurations()
 						.detachedConfiguration(project.getDependencies().create(library))
 						.setTransitive(false)
 						.getSingleFile();
-
-				try (FileSystemUtil.Delegate fs = FileSystemUtil.getJarFileSystem(libraryFile, false)) {
-					final Path configPath = fs.getPath("log4j2.xml");
-					Files.copy(configPath, outputFile);
-					found = true;
-					break;
-				} catch (IOException e) {
-					throw new UncheckedIOException(e);
-				}
 			}
 		}
 
-		if (!found) {
-			StringBuilder sb = new StringBuilder("Could not find Forge dependency with logger config. Tried to find:");
+		return null;
+	}
 
-			for (ArtifactCoordinates artifact : LOGGER_CONFIG_ARTIFACTS) {
-				sb.append('\n').append(" - ").append(artifact);
-			}
-
-			throw new RuntimeException(sb.toString());
+	public static void copyToPath(Path libraryFile, Path outputFile) {
+		try (FileSystemUtil.Delegate fs = FileSystemUtil.getJarFileSystem(libraryFile, false)) {
+			final Path configPath = fs.getPath("log4j2.xml");
+			Files.copy(configPath, outputFile, StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
 		}
+	}
+
+	@Contract("-> fail")
+	public static void throwNotFound() {
+		StringBuilder sb = new StringBuilder("Could not find Forge dependency with logger config. Tried to find:");
+
+		for (ArtifactCoordinates artifact : LOGGER_CONFIG_ARTIFACTS) {
+			sb.append('\n').append(" - ").append(artifact);
+		}
+
+		throw new RuntimeException(sb.toString());
 	}
 
 	private record ArtifactCoordinates(String group, String name, @Nullable String classifier) {

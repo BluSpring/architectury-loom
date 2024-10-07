@@ -2,7 +2,7 @@
 # Decompilers
 fernflower = "2.0.0"
 cfr = "0.2.2"
-vineflower = "1.9.3"
+vineflower = "1.10.1"
 
 # Runtime depedencies
 mixin-compile-extensions = "0.6.0"
@@ -45,5 +45,4 @@ access-transformers-new = { module = "net.minecraftforge:accesstransformers", ve
 access-transformers-neo = { module = "net.neoforged.accesstransformers:at-cli", version.ref = "access-transformers-neo" }
 unprotect = { module = "io.github.juuxel:unprotect", version.ref = "unprotect" }
 asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
-union-relauncher = { module = "io.github.juuxel:union-relauncher", version.ref = "union-relauncher" }
 access-transformers-log4j-bom = { module = "org.apache.logging.log4j:log4j-bom", version.ref = "access-transformers-log4j" }

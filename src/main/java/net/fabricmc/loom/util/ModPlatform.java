@@ -36,11 +36,11 @@ import net.fabricmc.loom.api.LoomGradleExtensionAPI;
 public enum ModPlatform {
 	FABRIC("Fabric", false),
 	FORGE("Forge", false),
-	QUILT("Quilt", true),
-	NEOFORGE("NeoForge", true);
+	QUILT("Quilt", false),
+	NEOFORGE("NeoForge", false);
 
 	private final String displayName;
-	boolean experimental;
+	private final boolean experimental;
 
 	ModPlatform(String displayName, boolean experimental) {
 		this.displayName = displayName;

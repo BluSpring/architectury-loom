@@ -1,7 +1,7 @@
 /*
  * This file is part of fabric-loom, licensed under the MIT License (MIT).
  *
- * Copyright (c) 2023 FabricMC
+ * Copyright (c) 2023-2024 FabricMC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +24,16 @@
 
 package net.fabricmc.loom.test.unit.forge
 
-import java.nio.file.Files
-import java.nio.file.Path
-
+import net.fabricmc.loom.api.processor.SpecContext
+import net.fabricmc.loom.configuration.accesstransformer.AccessTransformerJarProcessor
+import net.fabricmc.loom.util.ZipUtils
+import net.fabricmc.loom.util.fmj.FabricModJsonFactory
 import org.gradle.api.Project
 import spock.lang.Specification
 import spock.lang.TempDir
 
-import net.fabricmc.loom.api.processor.SpecContext
-import net.fabricmc.loom.configuration.accesstransformer.AccessTransformerJarProcessor
-import net.fabricmc.loom.util.fmj.FabricModJsonFactory
+import java.nio.file.Files
+import java.nio.file.Path
 
 class AccessTransformerJarProcessorTest extends Specification {
 	private static final String TEST_ACCESS_TRANSFORMER = 'public-f net.minecraft.world.level.block.IronBarsBlock m_54217_(Lnet/minecraft/world/level/block/state/BlockState;Z)Z'
@@ -44,14 +44,17 @@ class AccessTransformerJarProcessorTest extends Specification {
 	def "consistent spec hash"() {
 		given:
 		// Set up mods.toml and access transformer
-		def metaInf = tempDir.resolve('META-INF')
-		Files.createDirectory(metaInf)
+		def modDir = tempDir.resolve("mod")
+		def jarPath = tempDir.resolve("mod.jar")
+		def metaInf = modDir.resolve('META-INF')
+		Files.createDirectories(metaInf)
 		metaInf.resolve('accesstransformer.cfg').text = TEST_ACCESS_TRANSFORMER
 		metaInf.resolve('mods.toml').text = '[[mods]]\nmodId="hello"'
+		ZipUtils.pack(modDir, jarPath)
 
 		// Create processor and context
 		def processor = new AccessTransformerJarProcessor('at', Mock(Project), [])
-		def modJson = FabricModJsonFactory.createFromDirectory(tempDir)
+		def modJson = FabricModJsonFactory.createFromZip(jarPath)
 		def context = Mock(SpecContext)
 		context.localMods() >> [modJson]
 		when:

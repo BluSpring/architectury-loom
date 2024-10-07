@@ -6,7 +6,6 @@ plugins {
 	id 'eclipse'
 	id 'groovy'
 	id 'checkstyle'
-	id 'jacoco'
 	id 'codenarc'
 	alias(libs.plugins.kotlin) apply false // Delay this so we can perform magic 🪄 first.
 	alias(libs.plugins.spotless)
@@ -50,7 +49,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 }
 
 group = "gg.essential"
-def baseVersion = '1.6'
+def baseVersion = '1.7'
 
 def ENV = System.getenv()
 def runNumber = ENV.GITHUB_RUN_NUMBER ?: "9999"
@@ -92,10 +91,16 @@ configurations {
 	testRuntimeClasspath.extendsFrom bootstrap
 }
 
-configurations.all {
+configurations.configureEach {
 	resolutionStrategy {
 		// I am sorry, for now
 		// failOnNonReproducibleResolution()
+	}
+
+	if (canBeConsumed)  {
+		attributes {
+			attribute(GradlePluginApiVersion.GRADLE_PLUGIN_API_VERSION_ATTRIBUTE, objects.named(GradlePluginApiVersion, GradleVersion.current().getVersion()))
+		}
 	}
 }
 
@@ -304,20 +309,6 @@ gradlePlugin {
 	}
 }
 
-jacoco {
-	toolVersion = libs.versions.jacoco.get()
-}
-
-// Run to get test coverage.
-jacocoTestReport {
-	dependsOn test
-	reports {
-		xml.required = false
-		csv.required = false
-		html.outputLocation = file("${layout.buildDirectory.get().asFile}/jacocoHtml")
-	}
-}
-
 test {
 	maxHeapSize = "2560m"
 	jvmArgs "-XX:+HeapDumpOnOutOfMemoryError"
@@ -334,6 +325,16 @@ test {
 			maxRetries = 3
 		}
 	}
+}
+
+// Workaround https://github.com/gradle/gradle/issues/25898
+tasks.withType(Test).configureEach {
+	jvmArgs = [
+		'--add-opens=java.base/java.lang=ALL-UNNAMED',
+		'--add-opens=java.base/java.util=ALL-UNNAMED',
+		'--add-opens=java.base/java.lang.invoke=ALL-UNNAMED',
+		'--add-opens=java.base/java.net=ALL-UNNAMED'
+	]
 }
 
 
@@ -357,7 +358,7 @@ publishing {
 }
 
 // Need to tweak this file to pretend we are compatible with j8 so the bootstrap will run.
-tasks.withType(GenerateModuleMetadata) {
+tasks.withType(GenerateModuleMetadata).configureEach {
 	doLast {
 		def file = outputFile.get().asFile
 
@@ -372,7 +373,7 @@ tasks.withType(GenerateModuleMetadata) {
 }
 
 // A task to output a json file with a list of all the test to run
-task writeActionsTestMatrix() {
+tasks.register('writeActionsTestMatrix') {
 	doLast {
 		def testMatrix = []
 		file('src/test/groovy/net/fabricmc/loom/test/integration').traverse {
@@ -424,7 +425,7 @@ tasks.named('wrapper') {
 /**
  * Run this task to download the gradle sources next to the api jar, you may need to manually attach the sources jar
  */
-task downloadGradleSources() {
+tasks.register('downloadGradleSources') {
 	doLast {
 		// Awful hack to find the gradle api location
 		def gradleApiFile = project.configurations.detachedConfiguration(dependencies.gradleApi()).files.stream()
@@ -446,13 +447,13 @@ tasks.withType(GenerateModuleMetadata) {
 	enabled = false
 }
 
-task printActionsTestName(type: PrintActionsTestName) {
+tasks.register('printActionsTestName', PrintActionsTestName) {
 }
 
 /**
  * Replaces invalid characters in test names for GitHub Actions artifacts.
  */
-class PrintActionsTestName extends DefaultTask {
+abstract class PrintActionsTestName extends DefaultTask {
 	@Input
 	@Option(option = "name", description = "The test name")
 	String testName

@@ -24,26 +24,26 @@
 
 package net.fabricmc.loom.test.util
 
+import net.fabricmc.loom.util.FileSystemUtil
+
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.jar.Attributes
 import java.util.jar.Manifest
 
-import net.fabricmc.loom.util.FileSystemUtil
-
 class ZipTestUtils {
-	static Path createZip(Map<String, String> entries) {
+	static Path createZip(Map<String, String> entries, String suffix = ".zip") {
 		return createZipFromBytes(entries.collectEntries { k, v ->
 			[
 				k,
 				v.getBytes(StandardCharsets.UTF_8)
 			]
-		})
+		}, suffix)
 	}
 
-	static Path createZipFromBytes(Map<String, byte[]> entries) {
-		def file = Files.createTempFile("loom-test", ".zip")
+	static Path createZipFromBytes(Map<String, byte[]> entries, String suffix = ".zip") {
+		def file = Files.createTempFile("loom-test", suffix)
 		Files.delete(file)
 
 		FileSystemUtil.getJarFileSystem(file, true).withCloseable { zip ->
